@@ -25,3 +25,40 @@ defmodule Git do
     end)
   end
 end
+
+defmodule GitHours do
+  @doc """
+  Calculates total the duration between commits based on a time window in minutes.
+
+  If there are no commits, returns `{:error, "No commits found"}`. If there is only one
+  commit, returns `{:ok, time_window}`. Otherwise returns a `Duration` representing the
+  total time between commits.
+
+  ## Parameters
+  - `time_window`: The time window (in minutes) to use for the calculation
+  """
+  def calculate(time_window) do
+    commits = Git.log()
+
+    case commits do
+      [] ->
+        {:error, "No commits found"}
+
+      [_only_commit] ->
+        {:ok, time_window}
+
+      _ ->
+        commits
+        |> Enum.chunk_every(2, 1, :discard)
+        |> Enum.map(fn [a, b] ->
+          min(NaiveDateTime.diff(a.date, b.date, :millisecond) / 60_000, time_window)
+        end)
+        |> Enum.sum()
+        # to account for the "initial" time window
+        |> Kernel.+(time_window)
+    end
+  end
+end
+
+# use a 1hr time window
+GitHours.calculate(60) |> dbg()
