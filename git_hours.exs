@@ -65,7 +65,7 @@ end
 case GitHours.calculate(60) do
   {:ok, minutes} ->
     IO.puts(
-      "estimated time spent working on this git branch: #{Float.round(minutes / 60, 2)} hours"
+      "Estimated time spent working on this git branch: #{Float.round(minutes / 60, 2)} hours"
     )
 
   {:error, msg} ->
