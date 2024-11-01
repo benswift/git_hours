@@ -5,7 +5,15 @@ least something close to it conceptually.
 
 ## Usage
 
-TODO
+Run this script in a git repository to get a summary of the time you've spent.
+
+Currently the UX is super-basic; just change the `GitHours.calculate/1` call at
+the bottom of the file.
+
+## TODO
+
+Add more features... maybe? But honestly this is just to scratch an itch. So no
+timeline on if (or when) I'll get to it.
 
 ## Author
 
