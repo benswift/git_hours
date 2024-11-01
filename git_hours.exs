@@ -44,9 +44,6 @@ defmodule GitHours do
       [] ->
         {:error, "No commits found"}
 
-      [_only_commit] ->
-        {:ok, time_window}
-
       _ ->
         commits
         |> Enum.chunk_every(2, 1, :discard)
