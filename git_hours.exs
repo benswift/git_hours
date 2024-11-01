@@ -19,5 +19,9 @@ defmodule Git do
     |> Enum.map(fn commit ->
       Map.update(commit, "date", nil, &NaiveDateTime.from_iso8601!/1)
     end)
+    # change string keys to atoms
+    |> Enum.map(fn commit ->
+      for {key, val} <- commit, into: %{}, do: {String.to_atom(key), val}
+    end)
   end
 end
