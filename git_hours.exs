@@ -51,7 +51,7 @@ defmodule GitHours do
         commits
         |> Enum.chunk_every(2, 1, :discard)
         |> Enum.map(fn [a, b] ->
-          min(NaiveDateTime.diff(a.date, b.date, :millisecond) / 60_000, time_window)
+          min(NaiveDateTime.diff(a.date, b.date, :millisecond) / :timer.minutes(1), time_window)
         end)
         |> Enum.sum()
         # to account for the "initial" time window
