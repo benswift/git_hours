@@ -60,9 +60,12 @@ end
 
 # use a 1hr time window
 case GitHours.calculate(60) do
-  {:ok, minutes} ->
+  {:ok, total_minutes} ->
+    hours = floor(total_minutes / 60)
+    minutes = round(rem(floor(total_minutes), 60))
+
     IO.puts(
-      "Estimated time spent working on this git branch: #{Float.round(minutes / 60, 2)} hours"
+      "Estimated time spent working on this git branch: #{hours} hours and #{minutes} minutes"
     )
 
   {:error, msg} ->
