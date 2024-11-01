@@ -56,9 +56,18 @@ defmodule GitHours do
         |> Enum.sum()
         # to account for the "initial" time window
         |> Kernel.+(time_window)
+        |> then(fn minutes -> {:ok, minutes} end)
     end
   end
 end
 
 # use a 1hr time window
-GitHours.calculate(60) |> dbg()
+case GitHours.calculate(60) do
+  {:ok, minutes} ->
+    IO.puts(
+      "estimated time spent working on this git branch: #{Float.round(minutes / 60, 2)} hours"
+    )
+
+  {:error, msg} ->
+    IO.puts("Error: #{msg}")
+end
