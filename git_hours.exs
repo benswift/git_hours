@@ -4,10 +4,11 @@ defmodule Git do
   @moduledoc """
   Provides functions for interacting with Git and processing Git log output as JSON.
   """
-  def log() do
+  def log(branch_name) do
     {output, 0} =
       System.cmd("git", [
         "log",
+        branch_name,
         ~s(--pretty=format:{%n  "commit": "%H",%n  "author": "%an <%ae>",%n  "date": "%aI",%n  "message": "%f"%n},)
       ])
 
@@ -37,8 +38,11 @@ defmodule GitHours do
   ## Parameters
   - `time_window`: The time window (in minutes) to use for the calculation
   """
-  def calculate(time_window) do
-    commits = Git.log()
+
+  @time_window 60
+
+  def calculate(branch_name) do
+    commits = Git.log(branch_name)
 
     case commits do
       [] ->
@@ -48,26 +52,35 @@ defmodule GitHours do
         commits
         |> Enum.chunk_every(2, 1, :discard)
         |> Enum.map(fn [a, b] ->
-          min(NaiveDateTime.diff(a.date, b.date, :millisecond) / :timer.minutes(1), time_window)
+          min(NaiveDateTime.diff(a.date, b.date, :millisecond) / :timer.minutes(1), @time_window)
         end)
         |> Enum.sum()
         # to account for the "initial" time window
-        |> Kernel.+(time_window)
+        |> Kernel.+(@time_window)
         |> then(fn minutes -> {:ok, minutes} end)
+    end
+  end
+
+  def print_totals(branches) do
+    results =
+      branches
+      |> Enum.map(&calculate/1)
+      |> Enum.reduce({:ok, 0}, fn
+        {:ok, minutes}, {:ok, acc} -> {:ok, acc + minutes}
+        {:error, msg}, _acc -> {:error, msg}
+      end)
+
+    case results do
+      {:ok, total_minutes} ->
+        hours = floor(total_minutes / 60)
+        minutes = round(rem(floor(total_minutes), 60))
+
+        IO.puts("Estimated time spent: #{hours} hours and #{minutes} minutes")
+
+      {:error, msg} ->
+        IO.puts("Error: #{msg}")
     end
   end
 end
 
-# use a 1hr time window
-case GitHours.calculate(60) do
-  {:ok, total_minutes} ->
-    hours = floor(total_minutes / 60)
-    minutes = round(rem(floor(total_minutes), 60))
-
-    IO.puts(
-      "Estimated time spent working on this git branch: #{hours} hours and #{minutes} minutes"
-    )
-
-  {:error, msg} ->
-    IO.puts("Error: #{msg}")
-end
+GitHours.print_totals(System.argv())
