@@ -1,2 +1,3 @@
 #!/bin/bash
-elixir git_hours.exs $@
+
+elixir /Users/ben/Documents/elixir/git_hours/git_hours.exs $@
