@@ -4,13 +4,17 @@ defmodule Git do
   @moduledoc """
   Provides functions for interacting with Git and processing Git log output as JSON.
   """
-  def log(branch_name) do
+  def log(branch_name, git_dir \\ ".") do
     {output, 0} =
-      System.cmd("git", [
-        "log",
-        ~s(--pretty=format:{%n  "commit": "%H",%n  "author": "%an <%ae>",%n  "date": "%aI",%n  "message": "%f"%n},),
-        branch_name
-      ])
+      System.cmd(
+        "git",
+        [
+          "log",
+          ~s(--pretty=format:{%n  "commit": "%H",%n  "author": "%an <%ae>",%n  "date": "%aI",%n  "message": "%f"%n},),
+          branch_name
+        ],
+        cd: git_dir
+      )
 
     output
     # remove trailing comma because Jason is RFC 8259 compliant
@@ -41,8 +45,8 @@ defmodule GitHours do
 
   @time_window 60
 
-  def calculate(branch_name) do
-    commits = Git.log(branch_name)
+  def calculate(branch_name, git_dir \\ ".") do
+    commits = Git.log(branch_name, git_dir)
 
     case commits do
       [] ->
@@ -61,10 +65,10 @@ defmodule GitHours do
     end
   end
 
-  def print_totals(branches) do
+  def print_totals(branches, git_dir \\ ".") do
     results =
       branches
-      |> Enum.map(&calculate/1)
+      |> Enum.map(fn branch -> calculate(branch, git_dir) end)
       |> Enum.reduce({:ok, 0}, fn
         {:ok, minutes}, {:ok, acc} -> {:ok, acc + minutes}
         {:error, msg}, _acc -> {:error, msg}
@@ -83,4 +87,19 @@ defmodule GitHours do
   end
 end
 
-GitHours.print_totals(System.argv())
+# Parse command line arguments
+case System.argv() do
+  ["--git-dir", git_dir | branches] when branches != [] ->
+    GitHours.print_totals(branches, git_dir)
+
+  ["--git-dir", _git_dir | []] ->
+    IO.puts("Error: No branches specified")
+    System.halt(1)
+
+  branches when branches != [] ->
+    GitHours.print_totals(branches)
+
+  [] ->
+    IO.puts("Error: No branches specified")
+    System.halt(1)
+end
