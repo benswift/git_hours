@@ -8,8 +8,8 @@ defmodule Git do
     {output, 0} =
       System.cmd("git", [
         "log",
-        branch_name,
-        ~s(--pretty=format:{%n  "commit": "%H",%n  "author": "%an <%ae>",%n  "date": "%aI",%n  "message": "%f"%n},)
+        ~s(--pretty=format:{%n  "commit": "%H",%n  "author": "%an <%ae>",%n  "date": "%aI",%n  "message": "%f"%n},),
+        branch_name
       ])
 
     output
